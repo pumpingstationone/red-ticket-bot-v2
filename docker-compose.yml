@@ -1,0 +1,7 @@
+services:
+  red-ticket-bot:
+    build: .
+    container_name: red-ticket-bot
+    env_file:
+      - .env
+    restart: unless-stopped
