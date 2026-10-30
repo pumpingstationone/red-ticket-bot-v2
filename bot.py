@@ -27,6 +27,7 @@ RED_TICKET_BOT_TOKEN = os.environ["RED_TICKET_BOT_TOKEN"]
 GUILD_ID = os.environ.get("RED_TICKET_GUILD_ID")
 
 intents = discord.Intents.default()
+intents.message_content = True #v2
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 
