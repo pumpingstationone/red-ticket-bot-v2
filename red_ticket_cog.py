@@ -57,9 +57,9 @@ class RedTicketModal(discord.ui.Modal, title="Red Ticket Details"):
             max_length=1000,
         )
         self.owner_select = discord.ui.UserSelect(
-            min_values=1,
             max_values=1,
             placeholder="Select the owner",
+            required=False
         )
 
         self.add_item(discord.ui.Label(text="Location", component=self.location_input))
@@ -83,7 +83,7 @@ class RedTicketModal(discord.ui.Modal, title="Red Ticket Details"):
             )
             return
 
-        owner = self.owner_select.values[0]
+        owner = self.owner_select.values[0] if self.owner_select.values else None
         location = self.location_input.value.strip()
         item = self.item_input.value.strip()
         additional = self.additional_input.value.strip() or None
@@ -98,13 +98,15 @@ class RedTicketModal(discord.ui.Modal, title="Red Ticket Details"):
             log_channel = await interaction.client.fetch_channel(LOG_CHANNEL_ID)
 
         filename = self.attachment.filename
-
+        print(owner)
+        print(type(owner))
         def build_embed() -> discord.Embed:
             embed = discord.Embed(title="🔴 Red Ticket", color=RED_COLOR)
             embed.add_field(name="Location", value=location, inline=True)
             embed.add_field(name="Item", value=item, inline=True)
             embed.add_field(name="Days to Limbo", value=days_raw, inline=True)
-            embed.add_field(name="Owner", value=owner.mention, inline=True)
+            if owner is not None:
+                embed.add_field(name="Owner", value=owner.mention, inline=True)
             if additional:
                 embed.add_field(name="Additional Text", value=additional, inline=False)
             embed.set_image(url=f"attachment://{filename}")
@@ -112,10 +114,12 @@ class RedTicketModal(discord.ui.Modal, title="Red Ticket Details"):
 
         public_embed = build_embed()
         public_file = await self.attachment.to_file()
+        mentions = discord.AllowedMentions(users=[owner] if owner is not None else [])
+
         await public_channel.send(
             embed=public_embed,
             file=public_file,
-            allowed_mentions=discord.AllowedMentions(users=[owner]),
+            allowed_mentions=mentions,
         )
 
         log_embed = build_embed()
@@ -125,7 +129,7 @@ class RedTicketModal(discord.ui.Modal, title="Red Ticket Details"):
         await log_channel.send(
             embed=log_embed,
             file=log_file,
-            allowed_mentions=discord.AllowedMentions(users=[owner]),
+            allowed_mentions=mentions,
         )
 
         await interaction.followup.send("Red ticket submitted.", ephemeral=True)
